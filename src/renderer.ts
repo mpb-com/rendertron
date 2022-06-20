@@ -226,6 +226,31 @@ export class Renderer {
       `${dirname(parsedUrl.pathname || '')}`
     );
 
+    // Grab CSSOM styles and parse them into text
+    try {
+      const styles: string = await page.$$eval(
+        'style[data-styled]',
+        (styleElements) => {
+          return styleElements
+            .map((styleElement) => {
+              const rules: string[] = [];
+              // @ts-ignore
+              for (let rule of (styleElement as HTMLStyleElement).sheet
+                .cssRules) {
+                rules.push(rule.cssText);
+              }
+              return rules.join('\n');
+            })
+            .join('\n');
+        }
+      );
+
+      // Write styles to page
+      await page.addStyleTag({
+        content: styles,
+      });
+    } catch (e) {}
+
     // Serialize page.
     const result = (await page.content()) as string;
 

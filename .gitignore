@@ -3,3 +3,6 @@ node_modules/
 test.jpeg
 yarn.lock
 *.tgz
+tmp
+.idea
+config.json
