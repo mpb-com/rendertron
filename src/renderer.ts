@@ -141,6 +141,10 @@ export class Renderer {
     // to return a partial response for what was able to be rendered in that
     // time frame.
     page.on('response', (r: puppeteer.HTTPResponse) => {
+      if (!/^2|^3|^401$/.test(r.status().toString())) {
+        console.log('Rendertron Network Response:', r.url(), r.status());
+      }
+
       if (!response) {
         response = r;
       }
