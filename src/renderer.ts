@@ -38,7 +38,10 @@ export class Renderer {
       return true;
     }
 
-    if (this.config.restrictedUrlPattern && requestUrl.match(new RegExp(this.config.restrictedUrlPattern))) {
+    if (
+      this.config.restrictedUrlPattern &&
+      requestUrl.match(new RegExp(this.config.restrictedUrlPattern))
+    ) {
       return true;
     }
 
@@ -141,10 +144,6 @@ export class Renderer {
     // to return a partial response for what was able to be rendered in that
     // time frame.
     page.on('response', (r: puppeteer.HTTPResponse) => {
-      if (!/^2|^3|^401$/.test(r.status().toString())) {
-        console.log('Rendertron Network Response:', r.url(), r.status());
-      }
-
       if (!response) {
         response = r;
       }
@@ -157,7 +156,11 @@ export class Renderer {
         waitUntil: 'networkidle0',
       });
     } catch (e) {
-      console.error(e);
+      console.error(
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        `${e.message}. Request url: ${requestUrl}`
+      );
     }
 
     if (!response) {
