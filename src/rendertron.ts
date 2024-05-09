@@ -3,13 +3,18 @@ import bodyParser from 'koa-bodyparser';
 import koaCompress from 'koa-compress';
 import route from 'koa-route';
 import koaSend from 'koa-send';
-import koaLogger from 'koa-logger';
+//import koaLogger from 'koa-logger';
+import { detectCrawler } from './crawlers';
+import logger from './logger'
+import koaLogger from 'koa-logger-winston'
 import path from 'path';
 import puppeteer from 'puppeteer';
 import url from 'url';
 
 import { Renderer, ScreenshotError } from './renderer';
 import { Config, ConfigManager } from './config';
+
+const marketRegex = /https:\/\/.*?\/(.*?)\//
 
 /**
  * Rendertron rendering service. This runs the server which routes rendering
@@ -41,7 +46,7 @@ export class Rendertron {
 
     await this.createRenderer(this.config);
 
-    this.app.use(koaLogger());
+    this.app.use(koaLogger(logger));
 
     this.app.use(koaCompress());
 
@@ -139,6 +144,7 @@ export class Rendertron {
   }
 
   async handleRenderRequest(ctx: Koa.Context, url: string) {
+    // request.header.user-agent
     if (!this.renderer) {
       throw new Error('No renderer initalized yet.');
     }
@@ -147,6 +153,8 @@ export class Rendertron {
       ctx.status = 403;
       return;
     }
+
+    const started = performance.now();
 
     const mobileVersion = 'mobile' in ctx.query ? true : false;
 
@@ -168,6 +176,23 @@ export class Rendertron {
     );
     ctx.status = serialized.status;
     ctx.body = serialized.content;
+
+    const finished = performance.now();
+    const duration = parseFloat((finished - started).toFixed(0));
+    const userAgent = ctx.request.headers['user-agent'] || undefined;
+    const renderUrl = ctx.url.replace('/render/','')
+    const marketMatch = renderUrl.match(marketRegex)
+    const market = marketMatch ? marketMatch[1] : "Not Found"
+
+    const renderExtra = {
+      'render_crawler': userAgent ? detectCrawler(userAgent) : "Not Set",
+      'render_status': ctx.status,
+      'render_url': renderUrl,
+      'render_user_agent': userAgent || "Not Set",
+      'render_duration_ms': duration,
+      'render_market': market,
+    }
+    logger.info("render details", renderExtra)
   }
 
   async handleScreenshotRequest(ctx: Koa.Context, url: string) {
