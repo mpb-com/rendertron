@@ -3,7 +3,6 @@ import bodyParser from 'koa-bodyparser';
 import koaCompress from 'koa-compress';
 import route from 'koa-route';
 import koaSend from 'koa-send';
-//import koaLogger from 'koa-logger';
 import { detectCrawler } from './crawlers';
 import logger from './logger'
 import koaLogger from 'koa-logger-winston'
@@ -144,7 +143,6 @@ export class Rendertron {
   }
 
   async handleRenderRequest(ctx: Koa.Context, url: string) {
-    // request.header.user-agent
     if (!this.renderer) {
       throw new Error('No renderer initalized yet.');
     }
