@@ -4,7 +4,7 @@ const googleBotImage = 'Googlebot-Image'
 const googleBotVideo = 'Googlebot-Video'
 const googleStoreBot = 'Storebot-Google'
 const googleInspectBot = 'Google-InspectionTool'
-const googleOtherBot = 'Google-Other'
+const googleOtherBot = 'GoogleOther'
 const googleAdsBot = 'AdsBot-Google'
 const googleAdSenseBot = 'Mediapartners-Google'
 
