@@ -47,7 +47,8 @@
     "koa-static": "^5.0.0",
     "performance-now": "^2.1.0",
     "puppeteer": "^10.0.0",
-    "semver": "^7.3.4"
+    "semver": "^7.3.4",
+    "uuid": "^10.0.0"
   },
   "devDependencies": {
     "@google-cloud/datastore": "^6.3.1",
@@ -62,6 +63,7 @@
     "@types/node": "^14.14.10",
     "@types/puppeteer": "^5.4.3",
     "@types/supertest": "^2.0.10",
+    "@types/uuid": "^9.0.8",
     "@typescript-eslint/eslint-plugin": "^4.15.1",
     "@typescript-eslint/parser": "^4.14.2",
     "ava": "^3.15.0",

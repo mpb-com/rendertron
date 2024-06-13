@@ -1,6 +1,7 @@
 import puppeteer, { ScreenshotOptions } from 'puppeteer';
 import url from 'url';
 import { dirname } from 'path';
+import logger from './logger'
 
 import { Config } from './config';
 
@@ -51,7 +52,9 @@ export class Renderer {
   async serialize(
     requestUrl: string,
     isMobile: boolean,
-    timezoneId?: string
+    renderId: string,
+    started: number,
+    timezoneId?: string,
   ): Promise<SerializedResponse> {
     /**
      * Executed on the page after the page has loaded. Strips script and
@@ -156,11 +159,19 @@ export class Renderer {
         waitUntil: 'networkidle0',
       });
     } catch (e) {
-      console.error(
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        `${e.message}. Request url: ${requestUrl}`
-      );
+      const finished = performance.now();
+      const duration = parseFloat((finished - started).toFixed(0));
+      const extra = {
+        'render_id': renderId,
+        'render_url': requestUrl,
+        'render_duration_ms': duration,
+      }
+      logger.error(e.message, extra)
+      await page.close();
+      if (this.config.closeBrowser) {
+        await this.browser.close();
+      }
+      return { status: 500, customHeaders: new Map([['timeout', 'true']]), content: '' };
     }
 
     if (!response) {
