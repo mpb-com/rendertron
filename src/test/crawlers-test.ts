@@ -66,6 +66,16 @@ test('detect GoogleOther', (t: ExecutionContext) => {
   t.is(detectCrawler(userAgent), 'GoogleOther');
 });
 
+test('detect Google-Read-Aloud Mobile', (t: ExecutionContext) => {
+  const userAgent = ' Mozilla/5.0 (Linux; Android 7.0; SM-G930V Build/NRD90M) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.125 Mobile Safari/537.36 (compatible; Google-Read-Aloud; +https://support.google.com/webmasters/answer/1061943)';
+  t.is(detectCrawler(userAgent), 'Google-Read-Aloud Mobile');
+});
+
+test('detect Google-Read-Aloud', (t: ExecutionContext) => {
+  const userAgent = ' Mozilla/5.0 (Linux; Android 7.0; SM-G930V Build/NRD90M) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.125 Safari/537.36 (compatible; Google-Read-Aloud; +https://support.google.com/webmasters/answer/1061943)';
+  t.is(detectCrawler(userAgent), 'Google-Read-Aloud');
+});
+
 test('detect Genericbot', (t: ExecutionContext) => {
   const userAgent = 'Genericbot';
   t.is(detectCrawler(userAgent), 'Genericbot');

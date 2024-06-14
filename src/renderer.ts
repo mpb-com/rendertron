@@ -167,11 +167,6 @@ export class Renderer {
         'render_duration_ms': duration,
       }
       logger.error(e.message, extra)
-      await page.close();
-      if (this.config.closeBrowser) {
-        await this.browser.close();
-      }
-      return { status: 500, customHeaders: new Map([['timeout', 'true']]), content: '' };
     }
 
     if (!response) {
