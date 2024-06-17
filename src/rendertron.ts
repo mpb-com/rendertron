@@ -9,6 +9,7 @@ import koaLogger from 'koa-logger-winston'
 import path from 'path';
 import puppeteer from 'puppeteer';
 import url from 'url';
+import { v4 as uuidv4 } from 'uuid';
 
 import { Renderer, ScreenshotError } from './renderer';
 import { Config, ConfigManager } from './config';
@@ -152,14 +153,33 @@ export class Rendertron {
       return;
     }
 
+    const renderId = uuidv4()
     const started = performance.now();
+
+    const userAgent = ctx.request.headers['user-agent'] || undefined;
+    const renderUrl = ctx.url.replace('/render/','')
+    const marketMatch = renderUrl.match(marketRegex)
+    const market = marketMatch ? marketMatch[1] : "Not Found"
+    const renderCrawler =  userAgent ? detectCrawler(userAgent) : "Not Set";
+    const renderUserAgent =  userAgent || "Not Set";
+
+    const renderExtraRequest = {
+      'render_id': renderId,
+      'render_crawler': renderCrawler,
+      'render_url': renderUrl,
+      'render_user_agent': renderUserAgent,
+      'render_market': market,
+    }
+    logger.info("render request", renderExtraRequest)
 
     const mobileVersion = 'mobile' in ctx.query ? true : false;
 
     const serialized = await this.renderer.serialize(
       url,
       mobileVersion,
-      ctx.query.timezoneId
+      renderId,
+      started,
+      ctx.query.timezoneId,
     );
 
     for (const key in this.config.headers) {
@@ -168,6 +188,7 @@ export class Rendertron {
 
     // Mark the response as coming from Rendertron.
     ctx.set('x-renderer', 'rendertron');
+    ctx.set('x-render-id', renderId);
     // Add custom headers to the response like 'Location'
     serialized.customHeaders.forEach((value: string, key: string) =>
       ctx.set(key, value)
@@ -175,22 +196,21 @@ export class Rendertron {
     ctx.status = serialized.status;
     ctx.body = serialized.content;
 
+    const timeout = !!serialized.customHeaders.get('timeout');
     const finished = performance.now();
     const duration = parseFloat((finished - started).toFixed(0));
-    const userAgent = ctx.request.headers['user-agent'] || undefined;
-    const renderUrl = ctx.url.replace('/render/','')
-    const marketMatch = renderUrl.match(marketRegex)
-    const market = marketMatch ? marketMatch[1] : "Not Found"
 
-    const renderExtra = {
-      'render_crawler': userAgent ? detectCrawler(userAgent) : "Not Set",
+    const renderExtraDetails = {
+      'render_id': renderId,
+      'render_crawler': renderCrawler,
       'render_status': ctx.status,
       'render_url': renderUrl,
-      'render_user_agent': userAgent || "Not Set",
+      'render_user_agent': renderUserAgent,
       'render_duration_ms': duration,
       'render_market': market,
+      'render_timeout': timeout,
     }
-    logger.info("render details", renderExtra)
+    logger.info("render details", renderExtraDetails)
   }
 
   async handleScreenshotRequest(ctx: Koa.Context, url: string) {

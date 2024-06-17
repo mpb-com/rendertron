@@ -7,6 +7,7 @@ const googleInspectBot = 'Google-InspectionTool'
 const googleOtherBot = 'GoogleOther'
 const googleAdsBot = 'AdsBot-Google'
 const googleAdSenseBot = 'Mediapartners-Google'
+const googleReadAloudBot = 'Google-Read-Aloud'
 
 const mobileRegEx = new RegExp(` ${mobile} `)
 const googleBotRegEx = new RegExp(` ${googleBot}\/`)
@@ -18,6 +19,7 @@ const googleAdsBotRegEx = new RegExp(googleAdsBot)
 const googleOtherBotRegEx = new RegExp(googleOtherBot)
 const googleAdSenseMobileBotRegEx = new RegExp(`${googleAdSenseBot}\/`)
 const googleAdSenseBotRegEx = new RegExp(googleAdSenseBot)
+const googleReadAloudBotRegEx = new RegExp(googleReadAloudBot)
 
 const otherBot = /\b\w*bot\w*\b/i;
 
@@ -73,6 +75,11 @@ const detectCrawler = (userAgent: any) => {
   // Google Other
   if (googleOtherBotRegEx.test(userAgent)) {
     return googleOtherBot
+  }
+
+  // Google Read Aloud Mobile & Desktop
+  if (googleReadAloudBotRegEx.test(userAgent)) {
+    return `${googleReadAloudBot}${appendMobileString(isMobile)}`
   }
 
   // Google Extended & Apis-google & Google-Safety
