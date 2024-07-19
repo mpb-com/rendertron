@@ -7,7 +7,7 @@ import { detectCrawler } from './crawlers';
 import logger from './logger';
 import koaLogger from 'koa-logger-winston';
 import path from 'path';
-import puppeteer from 'puppeteer';
+import puppeteer, { Browser } from 'puppeteer';
 import url from 'url';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -26,15 +26,20 @@ export class Rendertron {
   private renderer: Renderer | undefined;
   private port = process.env.PORT || null;
   private host = process.env.HOST || null;
+  private browser: Browser | undefined;
 
   async createRenderer(config: Config) {
     const browser = await puppeteer.launch({ args: config.puppeteerArgs });
 
+    logger.info('Launched browser');
+
     browser.on('disconnected', () => {
+      logger.info('Disconnecting browser');
       this.createRenderer(config);
     });
 
     this.renderer = new Renderer(browser, config);
+    this.browser = browser;
   }
 
   async initialize(config?: Config) {
@@ -162,13 +167,16 @@ export class Rendertron {
     const market = marketMatch ? marketMatch[1] : 'Not Found';
     const renderCrawler = userAgent ? detectCrawler(userAgent) : 'Not Set';
     const renderUserAgent = userAgent || 'Not Set';
+    const pages = (await this?.browser?.pages()) ?? [];
 
+    logger.info('PAGES', pages);
     const renderExtraRequest = {
       render_id: renderId,
       render_crawler: renderCrawler,
       render_url: renderUrl,
       render_user_agent: renderUserAgent,
       render_market: market,
+      browser_pages: pages?.length,
     };
     logger.info('render request', renderExtraRequest);
 
