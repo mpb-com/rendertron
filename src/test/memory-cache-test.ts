@@ -1,3 +1,4 @@
+// @ts-nocheck
 /*
  * Copyright 2019 Google Inc. All rights reserved.
  *

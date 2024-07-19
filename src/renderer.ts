@@ -1,7 +1,12 @@
-import puppeteer, { ScreenshotOptions } from 'puppeteer';
+import {
+  ScreenshotOptions,
+  Browser,
+  HTTPRequest,
+  HTTPResponse,
+} from 'puppeteer';
 import url from 'url';
 import { dirname } from 'path';
-import logger from './logger'
+import logger from './logger';
 
 import { Config } from './config';
 
@@ -24,10 +29,10 @@ const MOBILE_USERAGENT =
  * APIs that are able to handle web components and PWAs.
  */
 export class Renderer {
-  private browser: puppeteer.Browser;
+  private browser: Browser;
   private config: Config;
 
-  constructor(browser: puppeteer.Browser, config: Config) {
+  constructor(browser: Browser, config: Config) {
     this.browser = browser;
     this.config = config;
   }
@@ -54,7 +59,7 @@ export class Renderer {
     isMobile: boolean,
     renderId: string,
     started: number,
-    timezoneId?: string,
+    timezoneId?: string
   ): Promise<SerializedResponse> {
     /**
      * Executed on the page after the page has loaded. Strips script and
@@ -114,7 +119,7 @@ export class Renderer {
     if (timezoneId) {
       try {
         await page.emulateTimezone(timezoneId);
-      } catch (e) {
+      } catch (e: any) {
         if (e.message.includes('Invalid timezone')) {
           return {
             status: 400,
@@ -133,7 +138,7 @@ export class Renderer {
 
     await page.setRequestInterception(true);
 
-    page.on('request', (interceptedRequest: puppeteer.HTTPRequest) => {
+    page.on('request', (interceptedRequest: HTTPRequest) => {
       if (this.restrictRequest(interceptedRequest.url())) {
         interceptedRequest.abort();
       } else {
@@ -141,12 +146,12 @@ export class Renderer {
       }
     });
 
-    let response: puppeteer.HTTPResponse | null = null;
+    let response: HTTPResponse | null = null;
     // Capture main frame response. This is used in the case that rendering
     // times out, which results in puppeteer throwing an error. This allows us
     // to return a partial response for what was able to be rendered in that
     // time frame.
-    page.on('response', (r: puppeteer.HTTPResponse) => {
+    page.on('response', (r: HTTPResponse) => {
       if (!response) {
         response = r;
       }
@@ -158,15 +163,15 @@ export class Renderer {
         timeout: this.config.timeout,
         waitUntil: 'networkidle0',
       });
-    } catch (e) {
+    } catch (e: any) {
       const finished = performance.now();
       const duration = parseFloat((finished - started).toFixed(0));
       const extra = {
-        'render_id': renderId,
-        'render_url': requestUrl,
-        'render_duration_ms': duration,
-      }
-      logger.error(e.message, extra)
+        render_id: renderId,
+        render_url: requestUrl,
+        render_duration_ms: duration,
+      };
+      logger.error(e.message, extra);
     }
 
     if (!response) {
@@ -303,7 +308,8 @@ export class Renderer {
 
     await page.setRequestInterception(true);
 
-    page.addListener('request', (interceptedRequest: puppeteer.HTTPRequest) => {
+    // @ts-ignore
+    page.addListener('request', (interceptedRequest: HTTPRequest) => {
       if (this.restrictRequest(interceptedRequest.url())) {
         interceptedRequest.abort();
       } else {
@@ -315,7 +321,7 @@ export class Renderer {
       await page.emulateTimezone(timezoneId);
     }
 
-    let response: puppeteer.HTTPResponse | null = null;
+    let response: HTTPResponse | null = null;
 
     try {
       // Navigate to page. Wait until there are no oustanding network requests.

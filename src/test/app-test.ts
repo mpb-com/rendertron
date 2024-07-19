@@ -14,6 +14,8 @@
  * the License.
  */
 
+// @ts-nocheck
+
 import test, { ExecutionContext } from 'ava';
 import Koa from 'koa';
 import koaStatic from 'koa-static';
@@ -547,16 +549,18 @@ test('urls mathing pattern are restricted', async (t) => {
     closeBrowser: false,
     restrictedUrlPattern: '.*(\\.test.html)($|\\?)',
   };
-  const cached_server = request(
-    await new Rendertron().initialize(mock_config)
-  );
+  const cached_server = request(await new Rendertron().initialize(mock_config));
   await app.listen(1240);
   // Make a restriced request
-  let res = await cached_server.get(`/render/${testBase}restrict-test.test.html`);
+  let res = await cached_server.get(
+    `/render/${testBase}restrict-test.test.html`
+  );
   t.is(res.status, 400);
   t.is(res.header['x-renderer'], 'rendertron');
 
-  res = await cached_server.get(`/render/${testBase}restrict-test.test.html?hello=world`);
+  res = await cached_server.get(
+    `/render/${testBase}restrict-test.test.html?hello=world`
+  );
   t.is(res.status, 400);
   t.is(res.header['x-renderer'], 'rendertron');
 
@@ -572,4 +576,3 @@ test('urls mathing pattern are restricted', async (t) => {
   await cached_server.get(`/invalidate/`);
   fs.rmdirSync(path.join(os.tmpdir(), 'rendertron-test-cache'));
 });
-

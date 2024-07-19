@@ -4,8 +4,8 @@ import koaCompress from 'koa-compress';
 import route from 'koa-route';
 import koaSend from 'koa-send';
 import { detectCrawler } from './crawlers';
-import logger from './logger'
-import koaLogger from 'koa-logger-winston'
+import logger from './logger';
+import koaLogger from 'koa-logger-winston';
 import path from 'path';
 import puppeteer from 'puppeteer';
 import url from 'url';
@@ -14,7 +14,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Renderer, ScreenshotError } from './renderer';
 import { Config, ConfigManager } from './config';
 
-const marketRegex = /https:\/\/.*?\/(.*?)\//
+const marketRegex = /https:\/\/.*?\/(.*?)\//;
 
 /**
  * Rendertron rendering service. This runs the server which routes rendering
@@ -153,24 +153,24 @@ export class Rendertron {
       return;
     }
 
-    const renderId = uuidv4()
+    const renderId = uuidv4();
     const started = performance.now();
 
     const userAgent = ctx.request.headers['user-agent'] || undefined;
-    const renderUrl = ctx.url.replace('/render/','')
-    const marketMatch = renderUrl.match(marketRegex)
-    const market = marketMatch ? marketMatch[1] : "Not Found"
-    const renderCrawler =  userAgent ? detectCrawler(userAgent) : "Not Set";
-    const renderUserAgent =  userAgent || "Not Set";
+    const renderUrl = ctx.url.replace('/render/', '');
+    const marketMatch = renderUrl.match(marketRegex);
+    const market = marketMatch ? marketMatch[1] : 'Not Found';
+    const renderCrawler = userAgent ? detectCrawler(userAgent) : 'Not Set';
+    const renderUserAgent = userAgent || 'Not Set';
 
     const renderExtraRequest = {
-      'render_id': renderId,
-      'render_crawler': renderCrawler,
-      'render_url': renderUrl,
-      'render_user_agent': renderUserAgent,
-      'render_market': market,
-    }
-    logger.info("render request", renderExtraRequest)
+      render_id: renderId,
+      render_crawler: renderCrawler,
+      render_url: renderUrl,
+      render_user_agent: renderUserAgent,
+      render_market: market,
+    };
+    logger.info('render request', renderExtraRequest);
 
     const mobileVersion = 'mobile' in ctx.query ? true : false;
 
@@ -179,7 +179,9 @@ export class Rendertron {
       mobileVersion,
       renderId,
       started,
-      ctx.query.timezoneId,
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      //@ts-ignore
+      ctx.query.timezoneId
     );
 
     for (const key in this.config.headers) {
@@ -201,16 +203,16 @@ export class Rendertron {
     const duration = parseFloat((finished - started).toFixed(0));
 
     const renderExtraDetails = {
-      'render_id': renderId,
-      'render_crawler': renderCrawler,
-      'render_status': ctx.status,
-      'render_url': renderUrl,
-      'render_user_agent': renderUserAgent,
-      'render_duration_ms': duration,
-      'render_market': market,
-      'render_timeout': timeout,
-    }
-    logger.info("render details", renderExtraDetails)
+      render_id: renderId,
+      render_crawler: renderCrawler,
+      render_status: ctx.status,
+      render_url: renderUrl,
+      render_user_agent: renderUserAgent,
+      render_duration_ms: duration,
+      render_market: market,
+      render_timeout: timeout,
+    };
+    logger.info('render details', renderExtraDetails);
   }
 
   async handleScreenshotRequest(ctx: Koa.Context, url: string) {
@@ -235,6 +237,7 @@ export class Rendertron {
         url,
         mobileVersion,
         dimensions,
+        // @ts-ignore
         ctx.query.timezoneId
       );
 

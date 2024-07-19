@@ -182,6 +182,7 @@ export class DatastoreCache {
       await next();
 
       if (ctx.status === 200) {
+        // @ts-ignore
         cacheContent(key, ctx.response.headers, ctx.body);
       }
     }.bind(this);
