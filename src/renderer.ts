@@ -9,6 +9,7 @@ type SerializedResponse = {
   status: number;
   customHeaders: Map<string, string>;
   content: string;
+  varnishCache: string;
 };
 
 type ViewportDimensions = {
@@ -120,6 +121,7 @@ export class Renderer {
             status: 400,
             customHeaders: new Map(),
             content: 'Invalid timezone id',
+            varnishCache: ''
           };
         }
       }
@@ -177,7 +179,7 @@ export class Renderer {
       if (this.config.closeBrowser) {
         await this.browser.close();
       }
-      return { status: 400, customHeaders: new Map(), content: '' };
+      return { status: 400, customHeaders: new Map(), content: '', varnishCache: '' };
     }
 
     // Disable access to compute metadata. See
@@ -187,7 +189,7 @@ export class Renderer {
       if (this.config.closeBrowser) {
         await this.browser.close();
       }
-      return { status: 403, customHeaders: new Map(), content: '' };
+      return { status: 403, customHeaders: new Map(), content: '', varnishCache: '' };
     }
 
     // Set status to the initial server's response code. Check for a <meta
@@ -277,6 +279,7 @@ export class Renderer {
         ? new Map(JSON.parse(customHeaders))
         : new Map(),
       content: result,
+      varnishCache: response.headers()['x-varnish'].toLowerCase() || 'unknown',
     };
   }
 
