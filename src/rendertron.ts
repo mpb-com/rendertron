@@ -13,6 +13,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { Renderer, ScreenshotError } from './renderer';
 import { Config, ConfigManager } from './config';
+import SingletonCounter from './counter';
 
 const marketRegex = /https:\/\/.*?\/(.*?)\//
 
@@ -163,12 +164,17 @@ export class Rendertron {
     const renderCrawler =  userAgent ? detectCrawler(userAgent) : "Not Set";
     const renderUserAgent =  userAgent || "Not Set";
 
+    const counter = SingletonCounter.getInstance()
+    const startCounts = counter.start();
+
     const renderExtraRequest = {
       'render_id': renderId,
       'render_crawler': renderCrawler,
       'render_url': renderUrl,
       'render_user_agent': renderUserAgent,
       'render_market': market,
+      'render_count': startCounts.count,
+      'render_concurrency': startCounts.concurrency,
     }
     logger.info("render request", renderExtraRequest)
 
@@ -200,6 +206,8 @@ export class Rendertron {
     const finished = performance.now();
     const duration = parseFloat((finished - started).toFixed(0));
 
+    const endCounts = counter.end();
+
     const renderExtraDetails = {
       'render_id': renderId,
       'render_crawler': renderCrawler,
@@ -209,6 +217,9 @@ export class Rendertron {
       'render_duration_ms': duration,
       'render_market': market,
       'render_timeout': timeout,
+      'render_count': endCounts.count,
+      'render_concurrency': endCounts.concurrency,
+      'render_varnish_cache': serialized.varnishCache || 'unknown'
     }
     logger.info("render details", renderExtraDetails)
   }
