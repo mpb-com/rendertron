@@ -279,7 +279,7 @@ export class Renderer {
         ? new Map(JSON.parse(customHeaders))
         : new Map(),
       content: result,
-      varnishCache: response.headers()['x-varnish'].toLowerCase() || 'unknown',
+      varnishCache: response.headers()?.['x-varnih']?.toLowerCase() || 'unknown',
     };
   }
 
