@@ -13,9 +13,11 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { Renderer, ScreenshotError } from './renderer';
 import { Config, ConfigManager } from './config';
-import SingletonCounter from './counter';
+import counter from './counter';
 
 const marketRegex = /https:\/\/.*?\/(.*?)\//
+
+const concurrencyKillCount = Number(process.env.CONCURRENCY_KILL_COUNT) || 8;
 
 /**
  * Rendertron rendering service. This runs the server which routes rendering
@@ -61,7 +63,7 @@ export class Rendertron {
       })
     );
     this.app.use(
-      route.get('/_ah/health', (ctx: Koa.Context) => (ctx.body = 'OK'))
+      route.get('/_ah/health', this.handleHealthRequest.bind(this))
     );
 
     // Optionally enable cache for rendering requests.
@@ -144,6 +146,21 @@ export class Rendertron {
     return true;
   }
 
+  async handleHealthRequest(ctx: Koa.Context) {
+    const { concurrency, count } = counter.getCounts()
+
+    if (concurrency <= concurrencyKillCount) {
+      logger.info(`Health check passed <= ${concurrencyKillCount}`, { render_concurrency: concurrency, render_count: count })
+      ctx.status = 200;
+      ctx.body = "OK";
+      return;
+    }
+
+    logger.error(`Health check failed > ${concurrencyKillCount}`, { render_concurrency: concurrency, render_count: count })
+    ctx.status = 500;
+    ctx.body = "ERROR";
+  }
+
   async handleRenderRequest(ctx: Koa.Context, url: string) {
     if (!this.renderer) {
       throw new Error('No renderer initalized yet.');
@@ -164,8 +181,7 @@ export class Rendertron {
     const renderCrawler =  userAgent ? detectCrawler(userAgent) : "Not Set";
     const renderUserAgent =  userAgent || "Not Set";
 
-    const counter = SingletonCounter.getInstance()
-    const startCounts = counter.start();
+    const startCounts = counter.increase();
 
     const renderExtraRequest = {
       'render_id': renderId,
@@ -206,7 +222,7 @@ export class Rendertron {
     const finished = performance.now();
     const duration = parseFloat((finished - started).toFixed(0));
 
-    const endCounts = counter.end();
+    const endCounts = counter.decrease();
 
     const renderExtraDetails = {
       'render_id': renderId,
