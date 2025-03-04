@@ -17,7 +17,7 @@ import counter from './counter';
 
 const marketRegex = /https:\/\/.*?\/(.*?)\//
 
-const concurrencyKillCount = Number(process.env.CONCURRENCY_KILL_COUNT) || 8;
+const concurrencyKillCount = Number(process.env.CONCURRENCY_KILL_COUNT) || 5;
 
 /**
  * Rendertron rendering service. This runs the server which routes rendering
