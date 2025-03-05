@@ -20,7 +20,9 @@ const marketRegex = /https:\/\/.*?\/(.*?)\//
 const concurrencyKillCount = Number(process.env.CONCURRENCY_KILL_COUNT) || 5;
 
 // 60s based on 10s healthcheck interval
-let cooldownCount = Number(process.env.COOLDOWN_COUNT) || 5;
+const cooldownCount = Number(process.env.COOLDOWN_COUNT) || 5;
+
+let cooldown = 0;
 
 /**
  * Rendertron rendering service. This runs the server which routes rendering
@@ -152,15 +154,23 @@ export class Rendertron {
   async handleHealthRequest(ctx: Koa.Context) {
     const { concurrency, count } = counter.getCounts()
 
-    if (concurrency <= concurrencyKillCount && cooldownCount === 0) {
-      logger.info(`Health check passed ${concurrencyKillCount} : ${cooldownCount}`, { render_concurrency: concurrency, render_count: count })
+    if (concurrency < concurrencyKillCount && cooldown === 0) {
+      logger.info(`Health check passed <= ${concurrencyKillCount}`, { render_concurrency: concurrency, render_count: count })
       ctx.status = 200;
       ctx.body = "OK";
       return;
     }
 
-    logger.error(`Health check failed ${concurrencyKillCount} : ${cooldownCount}`, { render_concurrency: concurrency, render_count: count })
-    cooldownCount--;
+    if (concurrency < concurrencyKillCount && cooldown > 0) {
+      logger.error(`Health check failed due to cooldown interval:  ${cooldown}`, { render_concurrency: concurrency, render_count: count })
+      cooldown--;
+      ctx.status = 500;
+      ctx.body = "ERROR";
+      return
+    }
+
+    logger.error(`Health check failed > ${concurrencyKillCount}`, { render_concurrency: concurrency, render_count: count })
+    cooldown = cooldownCount;
     ctx.status = 500;
     ctx.body = "ERROR";
   }
